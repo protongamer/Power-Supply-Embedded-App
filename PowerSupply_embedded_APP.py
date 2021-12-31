@@ -1,10 +1,16 @@
 #Simple Program to use with an embedded device that use USB HID protocol (visa32)
 #Protongamer 2021
 
+#scope = rm.open_resource('USB0::0x1AB1::0x04CE::DS1ZA210801726::INSTR')
+#
+#scope.write(':CHANnel1:DISPlay ON')
+
 import pyvisa
 import tkinter as tk
 from tkinter import *
+from tkinter import messagebox
 import tkinter.font as tkFont
+
 
 #Set a fix Identifier (default id : Rigol DP831)
 DEVICE_ID = 'USB0::0x1AB1::0x0E11::DP8F233900481::INSTR'
@@ -12,13 +18,10 @@ DEVICE_ID = 'USB0::0x1AB1::0x0E11::DP8F233900481::INSTR'
 #####################################
 ##START PHASE
 rm = pyvisa.ResourceManager()
-pwsp = rm.open_resource(DEVICE_ID)
 
-pwsp.write('*IDN?')
 
-DEVICE_NAME = pwsp.read()
 
-print(DEVICE_NAME)
+
 
 
 #primitives
@@ -48,22 +51,42 @@ myFont = tkFont.Font(family='Arial', size=16, weight='bold')
 
 
 
-window.geometry('720x200')
+window.geometry('1024x200')
+
+try:
+	pwsp = rm.open_resource(DEVICE_ID)
+except:
+	messagebox.showerror("Error", "Failed to connect the device")
+
+
+pwsp.write('*IDN?')
+DEVICE_NAME = pwsp.read()
+#print(DEVICE_NAME)
+
+
+
 lbl = Label(window, text="Power Supply App", font=myFont)
 lb2 = Label(window, text="Channel 1")
 lb3 = Label(window, text="Channel 2")
 lb4 = Label(window, text="Channel 3")
 
-lb5 = Label(window, text="V1 : 0.0V   A1 : 0.0A", font=myFont)
-lb6 = Label(window, text="V2 : 0.0V   A2 : 0.0A", font=myFont)
-lb7 = Label(window, text="V3 : 0.0V   A3 : 0.0A", font=myFont)
+lb5 = Label(window, text="Set V1 : 0.0V   Set A1 : 0.0A", font=myFont)
+lb6 = Label(window, text="Set V2 : 0.0V   Set A2 : 0.0A", font=myFont)
+lb7 = Label(window, text="Set V3 : 0.0V   Set A3 : 0.0A", font=myFont)
+
+lb8 = Label(window, text="V1 : 0.0V   A1 : 0.0A", font=myFont)
+lb9 = Label(window, text="V2 : 0.0V   A2 : 0.0A", font=myFont)
+lb10 = Label(window, text="V3 : 0.0V   A3 : 0.0A", font=myFont)
 
 lb_device = Label(window, text="Device : " + DEVICE_NAME)
+
+lbm_title = Label(window, text="       Measure   ", font=myFont)
 
 lbl.grid(column=0, row=0)
 lb2.grid(column=1, row=1)
 lb3.grid(column=2, row=1)
 lb4.grid(column=3, row=1)
+lbm_title.grid(column=4, row=0)
 
 lb5.config(fg= "red")
 lb6.config(fg= "red")
@@ -71,6 +94,13 @@ lb7.config(fg= "red")
 lb5.grid(column=0, row=2)
 lb6.grid(column=0, row=3)
 lb7.grid(column=0, row=4)
+
+lb8.config(fg= "green")
+lb9.config(fg= "green")
+lb10.config(fg= "green")
+lb8.grid(column=4, row=2, padx = 50)
+lb9.grid(column=4, row=3, padx = 50)
+lb10.grid(column=4, row=4, padx = 50)
 lb_device.grid(column=0, row=6)
 
 def setChannel(channel):
@@ -132,7 +162,7 @@ def setPreset():
 	localStrV = float(pwsp.read())
 	pwsp.write(':CURR?')
 	localStrA = float(pwsp.read())
-	lb5.configure(text="V1 : "+ str(localStrV) + "V   A1 : " + str(localStrA) + "A")
+	lb5.configure(text="Set V1 : "+ str(localStrV) + "V   Set A1 : " + str(localStrA) + "A")
 	
 	
 	pwsp.write(':INST CH2')
@@ -142,7 +172,7 @@ def setPreset():
 	localStrV = float(pwsp.read())
 	pwsp.write(':CURR?')
 	localStrA = float(pwsp.read())
-	lb6.configure(text="V2 : "+ str(localStrV) + "V   A2 : " + str(localStrA) + "A")
+	lb6.configure(text="Set V2 : "+ str(localStrV) + "V   Set A2 : " + str(localStrA) + "A")
 	
 	pwsp.write(':INST CH3')
 	pwsp.write(':VOLT ' + FieldV3.get())
@@ -151,10 +181,40 @@ def setPreset():
 	localStrV = float(pwsp.read())
 	pwsp.write(':CURR?')
 	localStrA = float(pwsp.read())
-	lb7.configure(text="V3 : "+ str(localStrV) + "V   A3 : " + str(localStrA) + "A")
+	lb7.configure(text="Set V3 : "+ str(localStrV) + "V   Set A3 : " + str(localStrA) + "A")
 	
 	
 		
+
+def multimeter():
+    #Every timeout send reading sequence
+	localStrV = 0
+	localStrA = 0
+	#read voltage on channel 1
+	pwsp.write(':MEAS:VOLT? CH1')
+	localStrV = float(pwsp.read())
+	#read current on channel 1
+	pwsp.write(':MEAS:CURR? CH1')
+	localStrA = float(pwsp.read())
+	#Display channel 1
+	lb8.configure(text="V1 : " + str(localStrV) + "V   A1 : " + str(localStrA) + "A")
+	
+	pwsp.write(':MEAS:VOLT? CH2')
+	localStrV = float(pwsp.read())
+	pwsp.write(':MEAS:CURR? CH2')
+	localStrA = float(pwsp.read())
+	lb9.configure(text="V2 : " + str(localStrV) + "V   A2 : " + str(localStrA) + "A")
+	
+	pwsp.write(':MEAS:VOLT? CH3')
+	localStrV = float(pwsp.read())
+	pwsp.write(':MEAS:CURR? CH3')
+	localStrA = float(pwsp.read())
+	lb10.configure(text="V3 : " + str(localStrV) + "V   A3 : " + str(localStrA) + "A")
+	
+	window.after(500, multimeter)  # reschedule event in 2 seconds
+
+
+
 
 
 
@@ -200,4 +260,6 @@ lbcurrent2.grid(row=4,column=2, sticky=tk.E, padx = 0, pady = 5)
 FieldA3.grid(row=4,column=3, padx = 5, pady = 5)
 lbcurrent3.grid(row=4,column=3, sticky=tk.E, padx = 0, pady = 5)
 
+
+window.after(500, multimeter)
 window.mainloop()

@@ -1,21 +1,18 @@
 #Simple Program to use with an embedded device that use USB HID protocol (visa32)
 #Protongamer 2021
 
-#scope = rm.open_resource('USB0::0x1AB1::0x04CE::DS1ZA210801726::INSTR')
-#
-#scope.write(':CHANnel1:DISPlay ON')
-
 import pyvisa
 import tkinter as tk
 from tkinter import *
 import tkinter.font as tkFont
 
-
+#Set a fix Identifier (default id : Rigol DP831)
+DEVICE_ID = 'USB0::0x1AB1::0x0E11::DP8F233900481::INSTR'
 
 #####################################
 ##START PHASE
 rm = pyvisa.ResourceManager()
-pwsp = rm.open_resource('USB0::0x1AB1::0x0E11::DP8F233900481::INSTR')
+pwsp = rm.open_resource(DEVICE_ID)
 
 pwsp.write('*IDN?')
 
